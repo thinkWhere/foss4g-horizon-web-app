@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/css/ol.css" type="text/css">
+    <style>
+      .map {
+        height: 750px;
+        width: 100%;
+        background-color: #000000
+      }
+    </style>
+    <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+    <script>
+//      proj4.defs('EPSG:27700', '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs');
+      var projection = new ol.proj.Projection({
+          code: 'EPSG:27700',
+          extent: [0.0, 0.0, 700000.0, 1300000.0],
+          units: 'm'
+          });
+      ol.proj.addProjection(projection);
+      var wmts_resolutions = [1000,500,200,100,50,25,10,5,2.5,1.27,0.5,0.2];
+      var extent = [0.0, 0.0, 700000.0, 1300000.0];
+	  var dem_extent = [0.0, 0.0, 660000.0, 1230000.0];
+    </script>
+    <title>Horizon Web App</title>
+  </head>
+  <body>
+    <div id="map" class="map"></div>
+    <script type="text/javascript">
+        var map = new ol.Map({
+        target: 'map',
+        layers: [
+          new ol.layer.Image({
+            source: new ol.source.ImageStatic({
+              attributions: '© OS',
+              url: 'data/dem.jpg',
+              projection: projection,
+              imageExtent: dem_extent
+            })
+          }),
+          new ol.layer.Vector({
+              title: 'Peaks',
+              source: new  ol.source.Vector({
+                 projection : projection,
+                 url: 'data/peaks.geojson',
+                 format: new ol.format.GeoJSON()
+              })
+           })
+        ],
+        view: new ol.View({
+            projection: projection,
+            //resolutions: wmts_resolutions,
+            center: [260000, 860000],
+            zoom: 4
+            })
+      });
+    </script>
+  </body>
+</html>
