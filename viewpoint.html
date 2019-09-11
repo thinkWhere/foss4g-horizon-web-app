@@ -52,13 +52,14 @@
 				$("#viewpoint-canvas").mousemove(function(e){handleMouseMove(e);});
             }
 			
+			/**
+			 * Clear the canvas and draw the peaks
+			 */ 
 			function init() {
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
 				drawImage();
                 drawCompassPoints();
                 drawPeaks();
-         
-				
 			}
 			
 			/**
