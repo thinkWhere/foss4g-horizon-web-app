@@ -1,159 +1,153 @@
 <html>
-	<head>
-		<title>Viewpoint Viewer</title>
-		<style>
-		    html, body {background-color: #000000;}
-			#frame
-			{
-				position: relative;
-				width: 100%;
-                height: 430px;
-				overflow-x: scroll;
-			}
-			#viewpoint-canvas
-			{
-				background-color: #203060;
-                display:block;
-			}
-		</style>
-	</head>
-	<body>
-		<div>Viewpoint Viewer</div>
-		<div id="frame">
-			<canvas id="viewpoint-canvas" width="6400" height="400"></canvas>
-		</div>
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-        <script>
-            var urlParams = new URLSearchParams(window.location.search);
-            var imageFile = urlParams.get('image');
-            var peaksFile = urlParams.get('peaks');
+<head>
+    <title>Viewpoint Viewer</title>
+    <style>
+        html, body {
+            background-color: #000000;
+        }
 
-            var peakData;
-            var canvas = document.getElementById('viewpoint-canvas');
-            ctx = canvas.getContext('2d');
-            image = new Image();
+        #frame {
+            position: relative;
+            width: 100%;
+            height: 430px;
+            overflow-x: scroll;
+        }
 
-            function loadPeaks()
-            {
-                var request = new XMLHttpRequest();
-                request.open('GET', "data/"+peaksFile+".json", true);
-                request.onload = function()
-                {
-                    peakData = JSON.parse(request.response);
-                    image.src = "data/"+imageFile+".png";
-                };
-                request.send();
-            }
+        #viewpoint-canvas {
+            background-color: #203060;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<div>Viewpoint Viewer</div>
+<div id="frame">
+    <canvas id="viewpoint-canvas" width="6400" height="400"></canvas>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>
+    var urlParams = new URLSearchParams(window.location.search);
+    var imageFile = urlParams.get('image');
+    var peaksFile = urlParams.get('peaks');
 
-            loadPeaks();
+    var peakData;
+    var canvas = document.getElementById('viewpoint-canvas');
+    ctx = canvas.getContext('2d');
+    image = new Image();
 
-            image.onload = function() {
+    function loadPeaks() {
+        var request = new XMLHttpRequest();
+        request.open('GET', "data/" + peaksFile + ".json", true);
+        request.onload = function () {
+            peakData = JSON.parse(request.response);
+            image.src = "data/" + imageFile + ".png";
+        };
+        request.send();
+    }
+
+    loadPeaks();
+
+    image.onload = function () {
+        init();
+        $("#viewpoint-canvas").mousemove(function (e) {
+            handleMouseMove(e);
+        });
+    }
+
+    /**
+     * Clear the canvas and draw the peaks
+     */
+    function init() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawImage();
+        drawCompassPoints();
+        drawPeaks();
+    }
+
+    /**
+     * Handle the mouse move events for showing the name of the peaks
+     */
+    function handleMouseMove(e) {
+        // tell the browser we're handling this event
+        e.preventDefault();
+        e.stopPropagation();
+
+        var bearing = e.offsetX;
+        var elevation = 200 - e.offsetY;
+        for (var i = 0; i < peakData.peaks.length; i++) {
+            var peak = peakData.peaks[i];
+            if ((Math.abs(peak.bearing - bearing) < 5) && (Math.abs(peak.elevation - elevation) < 5)) {
                 init();
-				$("#viewpoint-canvas").mousemove(function(e){handleMouseMove(e);});
+                showTooltip(peak.bearing, peak.elevation, peak.name);
             }
-			
-			/**
-			 * Clear the canvas and draw the peaks
-			 */ 
-			function init() {
-				ctx.clearRect(0, 0, canvas.width, canvas.height);
-				drawImage();
-                drawCompassPoints();
-                drawPeaks();
-			}
-			
-			/**
-			 * Handle the mouse move events for showing the name of the peaks
-			 */
-			function handleMouseMove(e){
-				// tell the browser we're handling this event
-				e.preventDefault();
-				e.stopPropagation();
+        }
+    }
 
-				var bearing = e.offsetX;
-				var elevation = 200 - e.offsetY;
-                for(var i=0;i<peakData.peaks.length;i++)
-				{
-					var peak = peakData.peaks[i];
-                    if((Math.abs(peak.bearing-bearing)<5)&&(Math.abs(peak.elevation-elevation)<5))
-                    {
-						init();
-						showTooltip(peak.bearing, peak.elevation, peak.name);
-                    }
-                }
-			}
-			
-			/**
-			 * Show tooltip
-			 * @x 
-             * @y
-			 * @peakName
-             */
-			function showTooltip(x, y, peakName) {
-				ctx.setTransform(1, 0, 0, 1, 0, 0);
-				ctx.fillText(peakName, x, y);
-			}	
+    /**
+     * Show tooltip
+     * @x
+     * @y
+     * @peakName
+     */
+    function showTooltip(x, y, peakName) {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.fillText(peakName, x, y);
+    }
 
-            function drawImage()
-            {
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                ctx.drawImage(image, 0, 600, 6400, 400, 0, 0, 6400, 400);
-            }
+    function drawImage() {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.drawImage(image, 0, 600, 6400, 400, 0, 0, 6400, 400);
+    }
 
-            function drawCompassPoints()
-            {
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
-                drawCompassMarker(0, "N");
-                drawCompassMarker(800, "NE");
-                drawCompassMarker(1600, "E");
-                drawCompassMarker(2400, "SE");
-                drawCompassMarker(3200, "S");
-                drawCompassMarker(4000, "SW");
-                drawCompassMarker(4800, "W");
-                drawCompassMarker(5600, "NW");
-                drawCompassMarker(6400, "N");
-            }
+    function drawCompassPoints() {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        drawCompassMarker(0, "N");
+        drawCompassMarker(800, "NE");
+        drawCompassMarker(1600, "E");
+        drawCompassMarker(2400, "SE");
+        drawCompassMarker(3200, "S");
+        drawCompassMarker(4000, "SW");
+        drawCompassMarker(4800, "W");
+        drawCompassMarker(5600, "NW");
+        drawCompassMarker(6400, "N");
+    }
 
-            function drawCompassMarker(x, label)
-            {
-                ctx.font = '20px serif';
-                ctx.textAlign = "center";
-                ctx.textBaseline = "bottom"
-                ctx.strokeStyle = "rgba(255, 255, 0, 1)";
-                ctx.fillStyle = "rgba(255, 255, 0, 1)";
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.moveTo(x, 400);
-                ctx.lineTo(x, 380);
-                ctx.closePath();
-                ctx.stroke();
-                ctx.fillText(label, x, 375);
-            }
+    function drawCompassMarker(x, label) {
+        ctx.font = '20px serif';
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom"
+        ctx.strokeStyle = "rgba(255, 255, 0, 1)";
+        ctx.fillStyle = "rgba(255, 255, 0, 1)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(x, 400);
+        ctx.lineTo(x, 380);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fillText(label, x, 375);
+    }
 
 
-            function drawPeaks()
-            {
-                ctx.setTransform(1, 0, 0, -1, 0, 200);
-                for(var i=0;i<peakData.peaks.length;i++)
-                {
-                    var peak = peakData.peaks[i];
-                    drawTriangle(peak.bearing, peak.elevation + 10, 12, 9);
-                }
-            }
+    function drawPeaks() {
+        ctx.setTransform(1, 0, 0, -1, 0, 200);
+        for (var i = 0; i < peakData.peaks.length; i++) {
+            var peak = peakData.peaks[i];
+            drawTriangle(peak.bearing, peak.elevation + 10, 12, 9);
+        }
+    }
 
-            function drawTriangle(peak_x, peak_y, width, height)
-            {
-                    ctx.strokeStyle = "rgba(255, 255, 0, 1)";
-                    ctx.fillStyle = "rgba(255, 255, 0, 1)";
-                    ctx.beginPath();
-                    ctx.moveTo(peak_x, peak_y);
-                    ctx.lineTo(peak_x-(width/2),peak_y-height);
-                    ctx.lineTo(peak_x+(width/2),peak_y-height);
-                    ctx.lineTo(peak_x, peak_y);
-                    ctx.closePath();
-                    ctx.stroke();
-                    ctx.fill();
-            }
-        </script>
-	</body>
+    function drawTriangle(peak_x, peak_y, width, height) {
+        ctx.strokeStyle = "rgba(255, 255, 0, 1)";
+        ctx.fillStyle = "rgba(255, 255, 0, 1)";
+        ctx.beginPath();
+        ctx.moveTo(peak_x, peak_y);
+        ctx.lineTo(peak_x - (width / 2), peak_y - height);
+        ctx.lineTo(peak_x + (width / 2), peak_y - height);
+        ctx.lineTo(peak_x, peak_y);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.fill();
+    }
+</script>
+</body>
 </html>
