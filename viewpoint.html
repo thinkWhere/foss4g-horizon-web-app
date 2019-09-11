@@ -22,6 +22,7 @@
 		<div id="frame">
 			<canvas id="viewpoint-canvas" width="6400" height="400"></canvas>
 		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
         <script>
             var urlParams = new URLSearchParams(window.location.search);
             var imageFile = urlParams.get('image');
@@ -47,23 +48,50 @@
             loadPeaks();
 
             image.onload = function() {
-                drawImage();
+                init();
+				$("#viewpoint-canvas").mousemove(function(e){handleMouseMove(e);});
+            }
+			
+			function init() {
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				drawImage();
                 drawCompassPoints();
                 drawPeaks();
-                canvas.onclick = function(e)
-                {
-                    var bearing = e.offsetX;
-                    var elevation = 200 - e.offsetY;
-                    for(var i=0;i<peakData.peaks.length;i++)
+         
+				
+			}
+			
+			/**
+			 * Handle the mouse move events for showing the name of the peaks
+			 */
+			function handleMouseMove(e){
+				// tell the browser we're handling this event
+				e.preventDefault();
+				e.stopPropagation();
+
+				var bearing = e.offsetX;
+				var elevation = 200 - e.offsetY;
+                for(var i=0;i<peakData.peaks.length;i++)
+				{
+					var peak = peakData.peaks[i];
+                    if((Math.abs(peak.bearing-bearing)<5)&&(Math.abs(peak.elevation-elevation)<5))
                     {
-                        var peak = peakData.peaks[i];
-                        if((Math.abs(peak.bearing-bearing)<5)&&(Math.abs(peak.elevation-elevation)<5))
-                        {
-                            console.log(peak.name);
-                        }
+						init();
+						showTooltip(peak.bearing, peak.elevation, peak.name);
                     }
                 }
-            }
+			}
+			
+			/**
+			 * Show tooltip
+			 * @x 
+             * @y
+			 * @peakName
+             */
+			function showTooltip(x, y, peakName) {
+				ctx.setTransform(1, 0, 0, 1, 0, 0);
+				ctx.fillText(peakName, x, y);
+			}	
 
             function drawImage()
             {
