@@ -46,6 +46,22 @@
                  format: new ol.format.GeoJSON()
               })
            }),
+           new ol.layer.Vector({
+            title: "Viewpoint",
+            source: new ol.source.Vector({
+              url:
+                "http://geoserver-ecs-alb-16367750.us-east-1.elb.amazonaws.com/geoserver/viewpoint/wfs?" +
+                "service=WFS&version=1.1.0&request=GetFeature&typename=viewpoint:viewpoint&" +
+                "outputFormat=application/json&srsname=EPSG:27700",
+              format: new ol.format.GeoJSON()
+              })/*,
+            style: new ol.Style({
+              stroke: new ol.Stroke({
+                color: 'rgba(0, 0, 255, 1.0)',
+                width: 2
+                })
+              })*/
+            }),
            new ol.layer.Tile({
               source: new ol.source.TileWMS({
                 params: {
