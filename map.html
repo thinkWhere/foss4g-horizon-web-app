@@ -52,7 +52,7 @@
             title: "Viewpoint",
             source: new ol.source.Vector({
               url:
-                "http://geoserver-ecs-alb-16367750.us-east-1.elb.amazonaws.com/geoserver/viewpoint/wfs?" +
+                GEOSERVER_URL + "/geoserver/viewpoint/wfs?" +
                 "service=WFS&version=1.1.0&request=GetFeature&typename=viewpoint:viewpoint&" +
                 "outputFormat=application/json&srsname=EPSG:27700",
               format: new ol.format.GeoJSON()
@@ -63,17 +63,6 @@
                 width: 2
                 })
               })*/
-            }),
-           new ol.layer.Tile({
-              source: new ol.source.TileWMS({
-                params: {
-                  LAYERS: "viewpoint",
-                  STYLES: "",
-                 },
-                url: GEOSERVER_URL + "/geoserver/viewpoint/wms"
-              }),
-              visible: true,
-              opacity: 1
             })
         ],
         view: new ol.View({
