@@ -37,10 +37,10 @@
 
     function loadPeaks() {
         var request = new XMLHttpRequest();
-        request.open('GET', "data/" + peaksFile + ".json", true);
+        request.open('GET', "data/" + peaksFile, true);
         request.onload = function () {
             peakData = JSON.parse(request.response);
-            image.src = "data/" + imageFile + ".png";
+            image.src = "data/" + imageFile;
         };
         request.send();
     }

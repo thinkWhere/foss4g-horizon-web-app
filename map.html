@@ -92,6 +92,21 @@
             zoom: 4
             })
       });
+
+      var select = new ol.interaction.Select();
+      select.on('select', function(e) {
+            console.log(e);
+            if(e.selected.length == 1){
+              if(e.selected[0].id_)
+              {
+                window.open("viewpoint.html?image="+e.selected[0].values_.image_file+"&peaks="+e.selected[0].values_.peaks_file);
+              } else {
+                alert(e.selected[0].values_.name)
+              }
+            }
+
+          });
+      map.addInteraction(select);
     </script>
   </body>
 </html>
