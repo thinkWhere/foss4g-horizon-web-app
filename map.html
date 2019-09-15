@@ -29,7 +29,22 @@
   <body>
     <div id="map" class="map"></div>
     <script type="text/javascript">
-        var map = new ol.Map({
+      function viewpointStyle(feature) {
+        var style = new ol.style.Style({
+          image: new ol.style.Circle({
+            radius: 6,
+            stroke: new ol.style.Stroke({
+              color: 'white',
+              width: 2
+            }),
+            fill: new ol.style.Fill({
+              color: (feature.values_.processed ? 'green': "yellow")
+            })
+          })
+        });
+        return [style];
+      }
+      var map = new ol.Map({
         target: 'map',
         layers: [
           new ol.layer.Image({
@@ -46,6 +61,16 @@
                  projection : projection,
                  url: 'data/peaks.geojson',
                  format: new ol.format.GeoJSON()
+              }),
+              style: new ol.style.Style({
+                image: new ol.style.RegularShape({
+                  fill: new ol.style.Fill({color: 'red'}),
+                  stroke: new ol.style.Stroke({color: 'black', width: 2}),
+                  points: 3,
+                  radius: 8,
+                  rotation: 0,
+                  angle: 0
+                })
               })
            }),
            new ol.layer.Vector({
@@ -56,13 +81,8 @@
                 "service=WFS&version=1.1.0&request=GetFeature&typename=viewpoint:viewpoint&" +
                 "outputFormat=application/json&srsname=EPSG:27700",
               format: new ol.format.GeoJSON()
-              })/*,
-            style: new ol.Style({
-              stroke: new ol.Stroke({
-                color: 'rgba(0, 0, 255, 1.0)',
-                width: 2
-                })
-              })*/
+              }),
+             style: viewpointStyle
             })
         ],
         view: new ol.View({
