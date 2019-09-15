@@ -11,6 +11,8 @@
     </style>
     <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
     <script>
+      var GEOSERVER_URL = "http://geoserver-ecs-alb-797859434.us-east-1.elb.amazonaws.com";
+
 //      proj4.defs('EPSG:27700', '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs');
       var projection = new ol.proj.Projection({
           code: 'EPSG:27700',
@@ -46,16 +48,21 @@
                  format: new ol.format.GeoJSON()
               })
            }),
-           new ol.layer.Tile({
-              source: new ol.source.TileWMS({
-                params: {
-                  LAYERS: "viewpoint",
-                  STYLES: "",
-                 },
-                url: "http://geoserver-ecs-alb-16367750.us-east-1.elb.amazonaws.com/geoserver/viewpoint/wms"
-              }),
-              visible: true,
-              opacity: 1
+           new ol.layer.Vector({
+            title: "Viewpoint",
+            source: new ol.source.Vector({
+              url:
+                GEOSERVER_URL + "/geoserver/viewpoint/wfs?" +
+                "service=WFS&version=1.1.0&request=GetFeature&typename=viewpoint:viewpoint&" +
+                "outputFormat=application/json&srsname=EPSG:27700",
+              format: new ol.format.GeoJSON()
+              })/*,
+            style: new ol.Style({
+              stroke: new ol.Stroke({
+                color: 'rgba(0, 0, 255, 1.0)',
+                width: 2
+                })
+              })*/
             })
         ],
         view: new ol.View({
