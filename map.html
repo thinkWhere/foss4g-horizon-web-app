@@ -2,55 +2,7 @@
 <html lang="en">
   <head>
     <link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/css/ol.css" type="text/css">
-    <style>
-      .map {
-        height: 750px;
-        width: 100%;
-        background-color: #000000
-      }
-      .ol-popup {
-        position: absolute;
-        background-color: white;
-        -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
-        filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
-        padding: 15px;
-        border-radius: 10px;
-        border: 1px solid #cccccc;
-        bottom: 12px;
-        left: -50px;
-        min-width: 280px;
-        min-height: 50px;
-        display: flex;
-        align-items: center;
-      }
-      .ol-popup:after, .ol-popup:before {
-        top: 100%;
-        border: solid transparent;
-        content: " ";
-        height: 0;
-        width: 0;
-        position: absolute;
-        pointer-events: none;
-      }
-      .ol-popup:after {
-        border-top-color: white;
-        border-width: 10px;
-        left: 48px;
-        margin-left: -10px;
-      }
-      .ol-popup:before {
-        border-top-color: #cccccc;
-        border-width: 11px;
-        left: 48px;
-        margin-left: -11px;
-      }
-      .ol-popup-closer {
-        text-decoration: none;
-        position: absolute;
-        top: 2px;
-        right: 8px;
-      }
-    </style>
+    <link rel="stylesheet" href="./style.css" type="text/css">
     <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
     <script>
       var GEOSERVER_URL = "http://geoserver-ecs-alb-797859434.us-east-1.elb.amazonaws.com";
@@ -69,7 +21,9 @@
     <title>Horizon Web App</title>
   </head>
   <body>
-    <div id="map" class="map"></div>
+    <div class="map-container">
+      <div id="map" class="map"></div>
+    </div>
     <div id="popup" class="ol-popup">
       <a href="#" id="popup-closer" class="ol-popup-closer">&#10006;</a>
       <div id="popup-content"></div>
@@ -107,12 +61,20 @@
         return false;
       };
 
+      var viewpointSource = new ol.source.Vector({
+        url:
+          GEOSERVER_URL + "/geoserver/viewpoint/wfs?" +
+          "service=WFS&version=1.1.0&request=GetFeature&typename=viewpoint:viewpoint&" +
+          "outputFormat=application/json&srsname=EPSG:27700",
+        format: new ol.format.GeoJSON()
+        });
+
       var map = new ol.Map({
         target: 'map',
         layers: [
           new ol.layer.Image({
             source: new ol.source.ImageStatic({
-              attributions: '© OS',
+              attributions: 'Contains Ordnance Survey data &copy; Crown copyright and database right 2019',
               url: 'data/dem.jpg',
               projection: projection,
               imageExtent: dem_extent
@@ -138,13 +100,7 @@
            }),
            new ol.layer.Vector({
             title: "Viewpoint",
-            source: new ol.source.Vector({
-              url:
-                GEOSERVER_URL + "/geoserver/viewpoint/wfs?" +
-                "service=WFS&version=1.1.0&request=GetFeature&typename=viewpoint:viewpoint&" +
-                "outputFormat=application/json&srsname=EPSG:27700",
-              format: new ol.format.GeoJSON()
-              }),
+            source: viewpointSource,
              style: viewpointStyle
             })
         ],
@@ -172,6 +128,60 @@
         }
       });
       map.addInteraction(select);
+
+      var draw = new ol.interaction.Draw({
+        source: this.vectorSource,
+        type: "Point",
+        geometryName: "geometry",
+      });
+      draw.on('drawend', function(e) {
+        insertFeature(e.feature);
+      });
+      //map.addInteraction(draw);
+
+      function insertFeature(feature) {
+        const formatGML = new ol.format.GML({
+          featureNS: "http://thinkwhere.com/viewpoint",
+          featureType: "viewpoint:viewpoint",
+          srsName: "EPSG:27700",
+          version: "1.1.0",
+        });
+        feature.setGeometryName("geometry");
+        feature.setProperties({processed: false});
+        let node = new ol.format.WFS().writeTransaction([feature], null, null, formatGML);
+        const xs = new XMLSerializer();
+        const data = xs.serializeToString(node);
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            viewpointSource.clear(true);
+          }
+        };
+        xhttp.open("POST", GEOSERVER_URL + "/geoserver/viewpoint/wfs", true);
+        xhttp.setRequestHeader("Content-type", "application/xml");
+        xhttp.send(data);
+      }
+
+      function onChangeTool(slider)
+      {
+        map.removeInteraction((slider.checked ? select : draw));
+        map.addInteraction((slider.checked ? draw : select));
+      }
+  
+    function refreshViewpoint() {
+      viewpointSource.clear(true);
+    }
+
+
     </script>
+    <div class="controls">
+      <div class="switch-container">
+        <label class="switch">
+        <input type="checkbox" onchange="onChangeTool(this);">
+        <span class="slider round"></span>
+      </label><span class="title">Add Viewpoint</span></div>
+      
+      <button id="refresh-viewpoint-button" onclick="refreshViewpoint()">Refresh</button>
+    </div>
   </body>
 </html>
