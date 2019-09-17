@@ -2,123 +2,7 @@
 <html lang="en">
   <head>
     <link rel="stylesheet" href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/css/ol.css" type="text/css">
-    <style>
-      .map {
-        height: 750px;
-        width: 100%;
-        background-color: #000000
-      }
-      .ol-popup {
-        position: absolute;
-        background-color: white;
-        -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
-        filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
-        padding: 15px;
-        border-radius: 10px;
-        border: 1px solid #cccccc;
-        bottom: 12px;
-        left: -50px;
-        min-width: 280px;
-        min-height: 50px;
-        display: flex;
-        align-items: center;
-      }
-      .ol-popup:after, .ol-popup:before {
-        top: 100%;
-        border: solid transparent;
-        content: " ";
-        height: 0;
-        width: 0;
-        position: absolute;
-        pointer-events: none;
-      }
-      .ol-popup:after {
-        border-top-color: white;
-        border-width: 10px;
-        left: 48px;
-        margin-left: -10px;
-      }
-      .ol-popup:before {
-        border-top-color: #cccccc;
-        border-width: 11px;
-        left: 48px;
-        margin-left: -11px;
-      }
-      .ol-popup-closer {
-        text-decoration: none;
-        position: absolute;
-        top: 2px;
-        right: 8px;
-      }
-
-      /* The switch - the box around the slider */
-      .switch {
-        position: relative;
-        display: inline-block;
-        width: 60px;
-        height: 34px;
-      }
-
-      /* Hide default HTML checkbox */
-      .switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-      }
-
-      /* The slider */
-      .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #ccc;
-        -webkit-transition: .4s;
-        transition: .4s;
-      }
-
-      .slider:before {
-        position: absolute;
-        content: "";
-        height: 26px;
-        width: 26px;
-        left: 4px;
-        bottom: 4px;
-        background-color: white;
-        -webkit-transition: .4s;
-        transition: .4s;
-      }
-
-      input:checked + .slider {
-        background-color: #2196F3;
-      }
-
-      input:focus + .slider {
-        box-shadow: 0 0 1px #2196F3;
-      }
-
-      input:checked + .slider:before {
-        -webkit-transform: translateX(26px);
-        -ms-transform: translateX(26px);
-        transform: translateX(26px);
-      }
-
-      /* Rounded sliders */
-      .slider.round {
-        border-radius: 34px;
-      }
-
-      .slider.round:before {
-        border-radius: 50%;
-      }
-
-      .title {
-        font-family: Calibri;
-        font-size: large;
-      }
-    </style>
+    <link rel="stylesheet" href="./style.css" type="text/css">
     <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
     <script>
       var GEOSERVER_URL = "http://geoserver-ecs-alb-797859434.us-east-1.elb.amazonaws.com";
@@ -137,7 +21,9 @@
     <title>Horizon Web App</title>
   </head>
   <body>
-    <div id="map" class="map"></div>
+    <div class="map-container">
+      <div id="map" class="map"></div>
+    </div>
     <div id="popup" class="ol-popup">
       <a href="#" id="popup-closer" class="ol-popup-closer">&#10006;</a>
       <div id="popup-content"></div>
@@ -188,7 +74,7 @@
         layers: [
           new ol.layer.Image({
             source: new ol.source.ImageStatic({
-              attributions: '© OS',
+              attributions: 'Contains Ordnance Survey data &copy; Crown copyright and database right 2019',
               url: 'data/dem.jpg',
               projection: projection,
               imageExtent: dem_extent
@@ -265,12 +151,10 @@
         let node = new ol.format.WFS().writeTransaction([feature], null, null, formatGML);
         const xs = new XMLSerializer();
         const data = xs.serializeToString(node);
-        console.log(data);
         var xhttp = new XMLHttpRequest();
         xhttp.onreadystatechange = function() {
           if (this.readyState == 4 && this.status == 200) {
-            console.log(this.responseText);
-            viewpointSource.refresh(true);
+            viewpointSource.clear(true);
           }
         };
         xhttp.open("POST", GEOSERVER_URL + "/geoserver/viewpoint/wfs", true);
@@ -283,10 +167,21 @@
         map.removeInteraction((slider.checked ? select : draw));
         map.addInteraction((slider.checked ? draw : select));
       }
+  
+    function refreshViewpoint() {
+      viewpointSource.clear(true);
+    }
+
+
     </script>
-    <label class="switch">
-      <input type="checkbox" onchange="onChangeTool(this);">
-      <span class="slider round"></span>
-    </label><span class="title">Add Viewpoint</span>
+    <div class="controls">
+      <div class="switch-container">
+        <label class="switch">
+        <input type="checkbox" onchange="onChangeTool(this);">
+        <span class="slider round"></span>
+      </label><span class="title">Add Viewpoint</span></div>
+      
+      <button id="refresh-viewpoint-button" onclick="refreshViewpoint()">Refresh</button>
+    </div>
   </body>
 </html>
